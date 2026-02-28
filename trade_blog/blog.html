@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Article</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .blog-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .blog-header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .blog-title {
+            font-size: 32px;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .blog-meta {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .blog-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin: 20px 0;
+            display: block;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .blog-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #4a5568;
+        }
+
+        .blog-content h2 {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #2d3748;
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="padding: 20px;">
+        <a href="document-editor.html" class="btn-secondary"
+            style="text-decoration: none; display: inline-block; margin-bottom: 20px;">&larr; Back to Editor</a>
+
+        <div class="blog-container" id="blog-container">
+            <div id="loading" style="text-align: center; color: #667eea; font-weight: bold;">Loading article...</div>
+            <div id="blog-content-wrapper" style="display: none;">
+                <div class="blog-header">
+                    <h1 class="blog-title" id="blog-title"></h1>
+                    <div class="blog-meta" id="blog-date"></div>
+                </div>
+                <div class="blog-content" id="blog-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadBlog() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+
+            if (!id) {
+                document.getElementById('loading').textContent = 'Error: No blog ID specified.';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/blogs/${id}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('blog-content-wrapper').style.display = 'block';
+
+                    document.getElementById('blog-title').textContent = data.blog.title;
+                    document.title = data.blog.title + " - Blog";
+                    document.getElementById('blog-date').textContent = new Date(data.blog.created_at).toLocaleString();
+                    document.getElementById('blog-content').innerHTML = data.blog.content;
+                } else {
+                    document.getElementById('loading').textContent = 'Error loading blog: ' + data.error;
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                document.getElementById('loading').textContent = 'Error connecting to the server.';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadBlog);
+    </script>
+</body>
+
+</html>
