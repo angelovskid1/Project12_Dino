@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,12 +13,13 @@
     <!-- External Stylesheet -->
     <link rel="stylesheet" href="styles.css">
 
-    <script> 
-    function saveAsPDF() { 
-      window.print(); 
-    } 
-</script>
+    <script>
+        function saveAsPDF() {
+            window.print();
+        } 
+    </script>
 </head>
+
 <body>
     <div class="app-layout">
         <!-- New Left Panel -->
@@ -27,7 +29,9 @@
                 <!-- Blog items will be injected here -->
             </div>
             <div style="margin-top: 20px;">
-                <a href="admin.html" class="btn-secondary" style="text-decoration: none; padding: 5px 10px; font-size: 14px; display: inline-block;">Admin Panel</a>
+                <a href="admin.html" class="btn-secondary"
+                    style="text-decoration: none; padding: 5px 10px; font-size: 14px; display: inline-block;">Admin
+                    Panel</a>
             </div>
         </div>
 
@@ -37,18 +41,33 @@
                 <div class="button-group">
                     <button class="btn-primary" onclick="createBlog()">🌐 Create Blog</button>
                     <button class="btn-secondary" onclick="exportToPDF()">📥 Export PDF</button>
-                    <button class="btn-danger" onclick="clearLocalStorage()" style="padding: 12px 12px; font-size: 12px;">🗑️ Clear Cache</button>
+                    <button class="btn-danger" onclick="clearLocalStorage()"
+                        style="padding: 12px 12px; font-size: 12px;">🗑️ Clear Cache</button>
                 </div>
             </div>
 
-        <div id="sections-container"></div>
+            <div id="sections-container"></div>
 
-        <button class="add-section-btn" onclick="addSection()">+ Add Section</button>
+            <button class="add-section-btn" onclick="addSection()">+ Add Section</button>
 
-        <div class="loading" id="loading" onclick="saveAsPDF()">Generating PDF...</div>
-    </div>
+            <!-- Custom Title Modal -->
+            <div id="title-modal" class="modal-backdrop">
+                <div class="modal-content">
+                    <h3 style="margin-bottom: 15px; color: #2d3748;">Enter Blog Title</h3>
+                    <input type="text" id="blog-title-input" class="modal-input"
+                        placeholder="e.g. My Awesome Trade Analysis" autofocus>
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                        <button class="btn-secondary" onclick="closeTitleModal()">Cancel</button>
+                        <button class="btn-primary" onclick="confirmCreateBlog()">Confirm</button>
+                    </div>
+                </div>
+            </div>
 
-    <!-- External JavaScript -->
-    <script src="editor.js"></script>
+            <div class="loading" id="loading" onclick="saveAsPDF()">Generating PDF...</div>
+        </div>
+
+        <!-- External JavaScript -->
+        <script src="editor.js"></script>
 </body>
+
 </html>

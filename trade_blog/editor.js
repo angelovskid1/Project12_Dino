@@ -378,8 +378,30 @@ async function fetchBlogs() {
 }
 
 async function createBlog() {
-    const title = prompt("Enter a title for your new blog:");
-    if (!title) return; // Cancelled or empty
+    const titleModal = document.getElementById('title-modal');
+    titleModal.style.display = 'flex';
+    document.getElementById('blog-title-input').focus();
+}
+
+function closeTitleModal() {
+    document.getElementById('title-modal').style.display = 'none';
+}
+
+async function confirmCreateBlog() {
+    const titleInput = document.getElementById('blog-title-input');
+    const title = titleInput.value.trim();
+
+    if (!title) {
+        alert("Please enter a title.");
+        titleInput.focus();
+        return;
+    }
+
+    closeTitleModal();
+
+    // Check if we are updating an existing blog or creating a new one
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
 
     // Gather content from all sections
     let fullContent = '';
@@ -399,17 +421,20 @@ async function createBlog() {
     });
 
     if (!fullContent.trim() || fullContent === '<p><br></p>') {
-        alert("Cannot create an empty blog.");
+        alert("Cannot save an empty blog.");
         return;
     }
 
     const loading = document.getElementById('loading');
-    loading.textContent = 'Creating Blog...';
+    loading.textContent = editId ? 'Updating Blog...' : 'Creating Blog...';
     loading.style.display = 'block';
 
+    const endpoint = editId ? `http://localhost:3000/api/blogs/${editId}` : 'http://localhost:3000/api/blogs';
+    const method = editId ? 'PUT' : 'POST';
+
     try {
-        const response = await fetch('http://localhost:3000/api/blogs', {
-            method: 'POST',
+        const response = await fetch(endpoint, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -425,18 +450,82 @@ async function createBlog() {
         loading.textContent = 'Generating PDF...'; // Reset text
 
         if (data.success) {
-            alert('Blog created successfully!');
+            alert(editId ? 'Blog updated successfully!' : 'Blog created successfully!');
             fetchBlogs();
+
+            // Redirect back to viewer if we were editing
+            if (editId) {
+                window.location.href = `blog.html?id=${editId}`;
+            }
         } else {
-            alert('Error creating blog: ' + data.error);
+            alert('Error saving blog: ' + data.error);
         }
     } catch (err) {
         loading.style.display = 'none';
         loading.textContent = 'Generating PDF...'; // Reset text
-        console.error('Error creating blog:', err);
+        console.error('Error saving blog:', err);
         alert('Error connecting to the server.');
     }
 }
 
-// Call fetchBlogs on load
-window.addEventListener('DOMContentLoaded', fetchBlogs);
+// Check if we are in edit mode
+async function initEditMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+
+    if (editId) {
+        // Change button text
+        const createBtn = document.querySelector('.btn-primary[onclick="createBlog()"]');
+        if (createBtn) {
+            createBtn.innerHTML = '📝 Update Blog';
+        }
+
+        try {
+            const loading = document.getElementById('loading');
+            loading.textContent = 'Loading Blog Content...';
+            loading.style.display = 'block';
+
+            const response = await fetch(`http://localhost:3000/api/blogs/${editId}`);
+            const data = await response.json();
+
+            loading.style.display = 'none';
+            loading.textContent = 'Generating PDF...'; // Reset text
+
+            if (data.success) {
+                document.getElementById('blog-title-input').value = data.blog.title;
+
+                // Clear existing sections
+                document.querySelectorAll('.section').forEach(s => s.remove());
+                sectionCount = 0;
+
+                // For simplicity, we shove all content into a single section when editing
+                addSection();
+                setTimeout(() => {
+                    const editor = editors[1];
+                    if (editor) {
+                        editor.root.innerHTML = data.blog.content;
+                    }
+                }, 200);
+            } else {
+                alert('Error loading blog for editing: ' + data.error);
+            }
+        } catch (err) {
+            console.error('Error fetching blog for edit:', err);
+            alert('Error connecting to the server.');
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+}
+
+// Add event listener for Enter key on modal
+document.getElementById('blog-title-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        confirmCreateBlog();
+    }
+});
+
+// Initialize
+window.addEventListener('DOMContentLoaded', () => {
+    fetchBlogs();
+    initEditMode();
+});

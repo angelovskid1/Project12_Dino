@@ -21,10 +21,11 @@ The primary goal was to enhance the existing Trading Blog tool by moving from a 
    - **Left Panel Navigation**: Appended a sidebar to the document editor displaying an autoupdating feed of recent blogs.
    - **Admin Management**: Engineered an intuitive `admin.html` tool, enabling effortless deletion of blogs, with SQLite cascade deletion handling the cleanup of orphaned images.
    - **Dedicated Reader View**: Programmed `blog.html` for clean, isolated reading of posts.
+   - **Custom Title Modal**: Replaced standard browser prompts with a modern, beautifully styled HTML modal popup for blog title creation.
+   - **Blog Editing Flow**: Added an "Edit" button to the article reader view, which dynamically reloads the original content back into the rich-text editor, changes the UI to an "Update Blog" mode, and saves updates efficiently via a new `PUT` API endpoint.
 
 ## Challenges & Solutions
 - **Base64 String Management**: Handling large payload sizes through Express caused initial constraints. I resolved this by increasing the Express `bodyParser.json({limit: '50mb'})` thresholds and structuring an elegant regex parser on the server side to swap heavy Base64 strings for tiny API endpoints.
 
 ## Future Recommendations
 - Implement user authentication to secure the admin panel and blog creation APIs.
-- Add editing capabilities to modify existing blogs instead of only creating or deleting them.

@@ -59,8 +59,11 @@
 
 <body>
     <div style="padding: 20px;">
-        <a href="document-editor.html" class="btn-secondary"
-            style="text-decoration: none; display: inline-block; margin-bottom: 20px;">&larr; Back to Editor</a>
+        <div style="display: flex; justify-content: space-between; max-width: 800px; margin: 0 auto 20px auto;">
+            <a href="document-editor.html" class="btn-secondary"
+                style="text-decoration: none; display: inline-block;">&larr; Back to Editor</a>
+            <button id="edit-btn" class="btn-primary" style="display: none; padding: 10px 20px;">✏️ Edit</button>
+        </div>
 
         <div class="blog-container" id="blog-container">
             <div id="loading" style="text-align: center; color: #667eea; font-weight: bold;">Loading article...</div>
@@ -96,6 +99,12 @@
                     document.title = data.blog.title + " - Blog";
                     document.getElementById('blog-date').textContent = new Date(data.blog.created_at).toLocaleString();
                     document.getElementById('blog-content').innerHTML = data.blog.content;
+
+                    const editBtn = document.getElementById('edit-btn');
+                    editBtn.style.display = 'inline-block';
+                    editBtn.onclick = () => {
+                        window.location.href = `document-editor.html?edit=${id}`;
+                    };
                 } else {
                     document.getElementById('loading').textContent = 'Error loading blog: ' + data.error;
                 }

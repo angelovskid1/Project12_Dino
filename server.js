@@ -432,6 +432,73 @@ app.post('/api/blogs', (req, res) => {
     );
 });
 
+// Update an existing blog
+app.put('/api/blogs/:id', (req, res) => {
+    const { id } = req.params;
+    const { title, content } = req.body;
+
+    if (!title || !content) {
+        return res.status(400).json({ error: 'Title and content are required' });
+    }
+
+    // First, clear existing images for this blog (cascade normally handles delete, but we are updating)
+    db.run('DELETE FROM images WHERE blog_id = ?', [id], (delErr) => {
+        if (delErr) return res.status(500).json({ error: delErr.message });
+
+        db.run(
+            'UPDATE blogs SET title = ?, content = ? WHERE id = ?',
+            [title, '', id], // Temporarily set content to empty while processing images
+            function (err) {
+                if (err) return res.status(500).json({ error: err.message });
+
+                let processedContent = content;
+                const imgRegex = /src="data:(image\/[^;]+);base64,([^"]+)"/g;
+                let match;
+                const imagesToInsert = [];
+
+                // Extract all base64 images
+                while ((match = imgRegex.exec(content)) !== null) {
+                    const mimeType = match[1];
+                    const base64Data = match[2];
+                    const buffer = Buffer.from(base64Data, 'base64');
+                    const fullMatchUrl = match[0].substring(5, match[0].length - 1);
+                    imagesToInsert.push({ mimeType, buffer, originalUrl: fullMatchUrl });
+                }
+
+                if (imagesToInsert.length === 0) {
+                    db.run('UPDATE blogs SET content = ? WHERE id = ?', [processedContent, id], (updErr) => {
+                        if (updErr) return res.status(500).json({ error: updErr.message });
+                        res.json({ success: true, blog_id: id });
+                    });
+                    return;
+                }
+
+                let insertedImages = 0;
+                imagesToInsert.forEach((img) => {
+                    db.run(
+                        'INSERT INTO images (blog_id, mime_type, data) VALUES (?, ?, ?)',
+                        [id, img.mimeType, img.buffer],
+                        function (imgErr) {
+                            if (imgErr) console.error('Error saving image:', imgErr);
+                            const imageId = this.lastID;
+
+                            processedContent = processedContent.replace(img.originalUrl, `/api/images/${imageId}`);
+                            insertedImages++;
+
+                            if (insertedImages === imagesToInsert.length) {
+                                db.run('UPDATE blogs SET content = ? WHERE id = ?', [processedContent, id], (updErr) => {
+                                    if (updErr) return res.status(500).json({ error: updErr.message });
+                                    res.json({ success: true, blog_id: id });
+                                });
+                            }
+                        }
+                    );
+                });
+            }
+        );
+    });
+});
+
 // Get all blogs list
 app.get('/api/blogs', (req, res) => {
     db.all(
